@@ -15,6 +15,11 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
+import static utils.Utils.hasComment;
+import static utils.Utils.hasCommentV2;
+
 public class CommentAction extends AnAction {
 
     @Override
@@ -29,16 +34,14 @@ public class CommentAction extends AnAction {
         if(psiFile==null) return;
 
         SelectionModel selectionModel= editor.getSelectionModel();
-        //String selectedText = selectionModel.getSelectedText();
         int selectionStart = selectionModel.getSelectionStart();
-        int selectionEnd = selectionModel.getSelectionEnd();
 
         PsiElement elementAtSelectionStart = psiFile.findElementAt(selectionStart);
         PsiMethod method = PsiTreeUtil.getParentOfType(elementAtSelectionStart, PsiMethod.class);
         assert method != null;
-        System.out.println(method.getDocComment());
+        System.out.println(hasComment(method));
+        System.out.println(hasCommentV2(method));
+        System.out.println(Objects.requireNonNull(method.getDocComment()).getText());
         System.out.println(method.getParent());
-
-
     }
 }

@@ -19,6 +19,10 @@ intellij {
 
   plugins.set(listOf("com.intellij.java"))
 }
+//
+//dependencies {
+//  implementation("org.projectlombok:lombok:1.18.32")
+//}
 
 tasks {
   // Set the JVM compatibility versions

@@ -33,7 +33,7 @@
 
   <actions>
     <action id="action.CommentAction" class="action.CommentAction" text="Comment method"
-            description="generate an AI comment for the selected method">
+            description="Generate an AI comment for the selected method">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
     </action>
   </actions>
