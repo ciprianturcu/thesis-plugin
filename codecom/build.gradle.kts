@@ -19,10 +19,14 @@ intellij {
 
   plugins.set(listOf("com.intellij.java"))
 }
-//
-//dependencies {
-//  implementation("org.projectlombok:lombok:1.18.32")
-//}
+
+dependencies {
+  // SLF4J API
+  implementation ("org.slf4j:slf4j-api:2.0.13")
+  // SLF4J Implementation: Logback
+  implementation ("ch.qos.logback:logback-classic:1.5.6")
+  implementation ("org.json:json:20240303")
+}
 
 tasks {
   // Set the JVM compatibility versions
