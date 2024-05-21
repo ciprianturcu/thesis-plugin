@@ -8,8 +8,8 @@ import com.intellij.psi.PsiTreeChangeListener;
 import listeners.ClassAndMethodChangeListener;
 import method.TreeBuilder;
 import model.AbstractTreeNode;
+import model.DirectoryNode;
 import model.MethodNode;
-import model.TreeNodeData;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -49,10 +49,10 @@ public class ToolWindowContent extends JPanel implements Disposable{
 
     private void performActionOnSelectedMethod(JTree methodTree) {
         // Get the selected node from the tree
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) methodTree.getLastSelectedPathComponent();
-        if (selectedNode != null && selectedNode.getUserObject() instanceof AbstractTreeNode<?> abstractTreeNode) {
+        AbstractTreeNode selectedNode = (AbstractTreeNode) methodTree.getLastSelectedPathComponent();
+        if (selectedNode != null) {
             // Check if it is a method node before performing the action
-            if (abstractTreeNode instanceof MethodNode methodNode) {
+            if (selectedNode instanceof MethodNode methodNode) {
                 // Perform your desired action here
                 System.out.println("Performing action on method: " + methodNode.getLabel());
                 // Example: You could show the method name in a dialog
@@ -60,6 +60,14 @@ public class ToolWindowContent extends JPanel implements Disposable{
 
                 System.out.println(CommentStatusCache.getInstance().toString());
             }
+            if(selectedNode instanceof DirectoryNode directoryNode) {
+                System.out.println("Performing action on directory: " + directoryNode.getLabel());
+                // Example: You could show the method name in a dialog
+                JOptionPane.showMessageDialog(this, "Directory Selected: " + directoryNode.getLabel());
+
+                System.out.println(CommentStatusCache.getInstance().toString());
+            }
+
         }
     }
 

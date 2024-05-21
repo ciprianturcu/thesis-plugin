@@ -1,0 +1,92 @@
+@startuml
+
+abstract class AbstractTreeNode {
+    - String name
+    --
+    + AbstractTreeNode(String name)
+    + String getName()
+    + abstract void add(AbstractTreeNode node)
+    + abstract void remove(AbstractTreeNode node)
+    + abstract AbstractTreeNode getChild(int index)
+    + abstract int getChildCount()
+}
+
+class ClassNode {
+    + ClassNode(String name)
+    + void add(AbstractTreeNode node)
+    + void remove(AbstractTreeNode node)
+    + AbstractTreeNode getChild(int index)
+    + int getChildCount()
+}
+
+class DirectoryNode {
+    + DirectoryNode(String name)
+    + void add(AbstractTreeNode node)
+    + void remove(AbstractTreeNode node)
+    + AbstractTreeNode getChild(int index)
+    + int getChildCount()
+}
+
+class MethodNode {
+    + MethodNode(String name)
+    + void add(AbstractTreeNode node)
+    + void remove(AbstractTreeNode node)
+    + AbstractTreeNode getChild(int index)
+    + int getChildCount()
+}
+
+class CustomColoredTreeCellRenderer {
+    + CustomColoredTreeCellRenderer()
+    + java.awt.Component getTreeCellRendererComponent(
+        javax.swing.JTree tree, Object value, boolean selected,
+        boolean expanded, boolean leaf, int row, boolean hasFocus)
+}
+
+class TreeBuilder {
+    - AbstractTreeNode root
+    --
+    + TreeBuilder(AbstractTreeNode root)
+    + void buildTree()
+}
+
+class HttpClientPool {
+    + HttpClientPool(int maxConnections)
+    + HttpClient getClient()
+    + void releaseClient(HttpClient client)
+}
+
+class PropertyLoader {
+    + PropertyLoader()
+    + Properties loadProperties(String fileName)
+}
+
+class Utils {
+    + Utils()
+    + static String readFileToString(File file)
+}
+
+class ToolWindow {
+    - ToolWindowContent content
+    --
+    + ToolWindow(ToolWindowContent content)
+    + void show()
+    + void hide()
+}
+
+class ToolWindowContent {
+    - String title
+    - AbstractTreeNode treeRoot
+    --
+    + ToolWindowContent(String title, AbstractTreeNode treeRoot)
+    + String getTitle()
+    + AbstractTreeNode getTreeRoot()
+}
+
+AbstractTreeNode <|-- ClassNode
+AbstractTreeNode <|-- DirectoryNode
+AbstractTreeNode <|-- MethodNode
+
+ToolWindow *-- ToolWindowContent
+ToolWindowContent *-- AbstractTreeNode
+
+@enduml

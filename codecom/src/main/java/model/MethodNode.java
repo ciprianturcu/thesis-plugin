@@ -15,7 +15,11 @@ public class MethodNode extends AbstractTreeNode<PsiMethod> {
         return hasDocComment;
     }
 
-    private  boolean updateCommentStatus() {
+    private void refreshCommentStatus() {
+        hasDocComment = updateCommentStatus();
+    }
+
+    private boolean updateCommentStatus() {
         return this.psiElement.getDocComment() != null;
     }
 

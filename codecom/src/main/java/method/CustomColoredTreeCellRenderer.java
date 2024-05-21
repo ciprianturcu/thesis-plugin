@@ -16,9 +16,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class CustomColoredTreeCellRenderer extends ColoredTreeCellRenderer {
     @Override
     public void customizeCellRenderer(@NotNull JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        if (value instanceof DefaultMutableTreeNode node) {
-            Object userObject = node.getUserObject();
-            if (userObject instanceof AbstractTreeNode<?> treeNode) {
+            if (value instanceof AbstractTreeNode<?> treeNode) {
                 SimpleTextAttributes attributes = getAttributes(treeNode);
                 append(treeNode.getLabel(), attributes);
                 setIcon(getIconFor(treeNode));
@@ -27,7 +25,6 @@ public class CustomColoredTreeCellRenderer extends ColoredTreeCellRenderer {
                 append(value.toString(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
                 setIcon(AllIcons.Nodes.Unknown);
             }
-        }
     }
 
     private SimpleTextAttributes getAttributes(AbstractTreeNode<?> treeNode) {
