@@ -1,15 +1,20 @@
 package model;
 
-import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiDirectory;
 
-public class DirectoryNode extends AbstractTreeNode<PsiElement> {
+public class DirectoryNode extends AbstractTreeNode<PsiDirectory> {
 
-    public DirectoryNode(String label, PsiElement psiElement) {
-        super(label, psiElement);
+    public DirectoryNode(PsiDirectory psiDirectory) {
+        super(psiDirectory);
+    }
+
+    @Override
+    public String getLabel() {
+        return psiElement.getName();
     }
 
     @Override
     public String toString() {
-        return label;
+        return getLabel();
     }
 }

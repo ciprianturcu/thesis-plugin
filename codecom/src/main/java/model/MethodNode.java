@@ -6,8 +6,8 @@ public class MethodNode extends AbstractTreeNode<PsiMethod> {
 
     private boolean hasDocComment;
 
-    public MethodNode(String label, PsiMethod psiMethod) {
-        super(label, psiMethod);
+    public MethodNode(PsiMethod psiMethod) {
+        super(psiMethod);
         hasDocComment = updateCommentStatus();
     }
 
@@ -24,7 +24,12 @@ public class MethodNode extends AbstractTreeNode<PsiMethod> {
     }
 
     @Override
+    public String getLabel() {
+        return psiElement.getName();
+    }
+
+    @Override
     public String toString() {
-        return label;
+        return getLabel();
     }
 }

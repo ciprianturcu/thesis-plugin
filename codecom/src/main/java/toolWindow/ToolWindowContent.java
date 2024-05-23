@@ -12,7 +12,6 @@ import model.DirectoryNode;
 import model.MethodNode;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 
 public class ToolWindowContent extends JPanel implements Disposable{
@@ -43,7 +42,7 @@ public class ToolWindowContent extends JPanel implements Disposable{
 
     private void initializeListeners() {
         PsiManager psiManager = PsiManager.getInstance(project);
-        psiTreeChangeListener = new ClassAndMethodChangeListener(project, treeBuilder, null);
+        psiTreeChangeListener = new ClassAndMethodChangeListener(project, treeBuilder);
         psiManager.addPsiTreeChangeListener(psiTreeChangeListener, this); // Auto-removed when this object is disposed
     }
 

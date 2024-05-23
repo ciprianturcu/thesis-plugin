@@ -5,6 +5,7 @@ import cache.CommentStatusCache;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.*;
 import com.intellij.psi.impl.source.PsiClassImpl;
+import com.intellij.psi.impl.source.PsiJavaFileImpl;
 import com.intellij.psi.impl.source.PsiMethodImpl;
 import method.TreeBuilder;
 import model.AbstractTreeNode;
@@ -19,17 +20,20 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import static utils.PsiElementTreeUtil.repaintTreeAndKeepExpanded;
+
 public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     private final Project project;
     private final TreeBuilder treeBuilder;
-    private final CommentStatusCache commentCache;
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassAndMethodChangeListener.class);
 
 
-    public ClassAndMethodChangeListener(Project project, TreeBuilder treeBuilder, CommentStatusCache commentCache) {
+    public ClassAndMethodChangeListener(Project project, TreeBuilder treeBuilder) {
         this.project = project;
         this.treeBuilder = treeBuilder;
-        this.commentCache = commentCache;
     }
 
     @Override
@@ -48,19 +52,25 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     @Override
     public void childRemoved(@NotNull PsiTreeChangeEvent event) {
         PsiElement eventChild = event.getChild();
-        LOGGER.info("child removed - {}", eventChild.getClass());
+        LOGGER.info("child removed - {}, {}", eventChild.getClass(), eventChild.getChildren());
 
         if (eventChild instanceof PsiMethodImpl) {
             removePsiElementFromTree(eventChild);
         } else if (eventChild instanceof PsiClassImpl) {
             removePsiElementFromTree(eventChild);
         }
+        else if(eventChild instanceof PsiJavaFileImpl psiJavaFile){
+            for(PsiClass psiClass : psiJavaFile.getClasses()){
+                removePsiElementFromTree(psiClass);
+            }
+        }
     }
 
     @Override
     public void childReplaced(@NotNull PsiTreeChangeEvent event) {
         PsiElement element = event.getChild();
-        LOGGER.info("child replaced - {}" , element.getClass());
+        LOGGER.info("child replaced - element: {},oldChild: {}, child : {}, parent: {}" ,event.getElement(), event.getOldChild(), element.getClass(), event.getParent());
+        repaintTreeAndKeepExpanded(treeBuilder.getMethodTree());
     }
 
     @Override
@@ -82,7 +92,7 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
         if (parentPath != null) {
             AbstractTreeNode<?> parentNode = (AbstractTreeNode<?>) parentPath.getLastPathComponent();
             PsiMethod method = (PsiMethod) psiMethod;
-            MethodNode newMethodNode = new MethodNode(method.getName(), method);
+            MethodNode newMethodNode = new MethodNode(method);
             parentNode.add(newMethodNode);
             treeBuilder.reload();
         } else {
@@ -92,6 +102,9 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
 
     private void addPsiClassToTree(PsiElement psiClassElement, PsiElement eventParent) {
         JTree tree = treeBuilder.getMethodTree();
+        if(eventParent instanceof PsiJavaFile psiJavaFile) {
+            eventParent = psiJavaFile.getParent();
+        }
         TreePath parentPath = PsiElementTreeUtil.findPathForPsiElement(tree, eventParent);
         if (parentPath == null) {
             LOGGER.info("parentPathIsNULL");
@@ -101,12 +114,16 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
         if (parentPath != null) {
             DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) parentPath.getLastPathComponent();
             PsiClass psiClass = (PsiClass) psiClassElement;
-            ClassNode newClassNode = new ClassNode(psiClass.getName(), psiClass);
+            ClassNode newClassNode = new ClassNode(psiClass);
             parentNode.add(newClassNode);
             treeBuilder.reload();
         } else {
             LOGGER.warn("Parent node not found for PSI element: {}", eventParent);
         }
+    }
+
+    private void addPsiJavaFileToTree(PsiElement psiJavaFileElement, PsiElement eventParent){
+
     }
 
     private void removePsiElementFromTree(PsiElement psiElement) {
@@ -119,9 +136,29 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
             if (parentNode != null) {
                 parentNode.remove(elementNode);
                 treeBuilder.reload(parentNode);
+
+                removeAllDescendants(elementNode);
             }
         } else {
             LOGGER.warn("Node not found for PSI element: {}", psiElement);
         }
+    }
+
+    // Recursive method to remove all descendants of a node
+    private void removeAllDescendants(DefaultMutableTreeNode node) {
+        // Copy children to avoid ConcurrentModificationException
+        List<DefaultMutableTreeNode> children = new ArrayList<>();
+        for (int i = 0; i < node.getChildCount(); i++) {
+            children.add((DefaultMutableTreeNode) node.getChildAt(i));
+        }
+
+        // Recursively remove children
+        for (DefaultMutableTreeNode child : children) {
+            removeAllDescendants(child);
+            child.removeAllChildren(); // This is just to nullify children references
+            child.setUserObject(null); // Nullify user object to aid GC
+        }
+
+        node.removeAllChildren(); // Finally remove all children of the current node
     }
 }

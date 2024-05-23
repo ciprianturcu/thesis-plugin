@@ -19,7 +19,6 @@ import javax.swing.tree.TreePath;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 public class TreeBuilder {
     private final Project project;
@@ -32,7 +31,7 @@ public class TreeBuilder {
     public TreeBuilder(Project project) {
         this.project = project;
         this.root = new DefaultMutableTreeNode("Project modules");
-        this.methodTree = new Tree(root);
+        this.methodTree = new Tree(new SortedTreeModel(root));
         this.methodTree.setCellRenderer(new CustomColoredTreeCellRenderer());
         this.methodTree.addTreeSelectionListener(e->{
             AbstractTreeNode<?> selectedNode = (AbstractTreeNode<?>) methodTree.getLastSelectedPathComponent();
@@ -83,7 +82,7 @@ public class TreeBuilder {
 
         // Allow expanding and collapsing nodes
         methodTree.setShowsRootHandles(true);
-        methodTree.setRootVisible(true);
+        methodTree.setRootVisible(false);
     }
 
 
@@ -125,13 +124,16 @@ public class TreeBuilder {
     }
 
     public DefaultMutableTreeNode depthFirstSearch(PsiDirectory psiDirectory) {
-        DirectoryNode node = new DirectoryNode(psiDirectory.getName(), psiDirectory);
+        DirectoryNode node = new DirectoryNode(psiDirectory);
         boolean hasJavaFile = false;
 
         for(PsiFile psiFile : psiDirectory.getFiles())
         {
             if (psiFile.getName().endsWith(".java")) {
+
                 if (psiFile instanceof PsiJavaFile psiJavaFile) {
+                    //JavaFileNode javaFileNode = new JavaFileNode(psiFile.getName(), psiJavaFile);
+                    //node.add(javaFileNode);
                     processPsiJavaFile(node, psiJavaFile);
                 }
                 hasJavaFile = true;
@@ -153,9 +155,9 @@ public class TreeBuilder {
     private void processPsiJavaFile(DefaultMutableTreeNode root, final PsiJavaFile psiJavaFile){
         List<PsiClass> psiClassesOfFile = getAllClassesOfPsiJavaFile(psiJavaFile);
         for (PsiClass psiClass : psiClassesOfFile) {
-            DefaultMutableTreeNode classNode = new ClassNode(psiClass.getName(), psiClass);
+            DefaultMutableTreeNode classNode = new ClassNode(psiClass);
             for (PsiMethod psiMethod : psiClass.getMethods()) {
-                classNode.add(new MethodNode(psiMethod.getName(), psiMethod));
+                classNode.add(new MethodNode(psiMethod));
                 CommentStatusCache.getInstance().addMethod(psiMethod);
             }
             root.add(classNode);

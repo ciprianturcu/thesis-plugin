@@ -4,10 +4,7 @@ import com.intellij.icons.AllIcons;
 import com.intellij.ui.ColoredTreeCellRenderer;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleTextAttributes;
-import model.AbstractTreeNode;
-import model.ClassNode;
-import model.DirectoryNode;
-import model.MethodNode;
+import model.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -20,7 +17,8 @@ public class CustomColoredTreeCellRenderer extends ColoredTreeCellRenderer {
                 SimpleTextAttributes attributes = getAttributes(treeNode);
                 append(treeNode.getLabel(), attributes);
                 setIcon(getIconFor(treeNode));
-            } else {
+            }
+            else {
                 // Handle non-AbstractTreeNode objects generically
                 append(value.toString(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
                 setIcon(AllIcons.Nodes.Unknown);

@@ -5,17 +5,13 @@ import com.intellij.psi.PsiElement;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public abstract class AbstractTreeNode<T extends PsiElement> extends DefaultMutableTreeNode {
-    protected final String label;
     protected final T psiElement;
 
-    public AbstractTreeNode(String label, T psiElement) {
-        this.label = label;
+    public AbstractTreeNode( T psiElement) {
         this.psiElement = psiElement;
     }
 
-    public String getLabel() {
-        return label;
-    }
+    public abstract String getLabel();
 
     public T getPsiElement() {
         return psiElement;
