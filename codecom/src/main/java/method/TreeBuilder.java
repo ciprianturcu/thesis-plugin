@@ -1,6 +1,6 @@
 package method;
 
-import cache.CommentStatusCache;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.pom.Navigatable;
@@ -8,8 +8,7 @@ import com.intellij.psi.*;
 import com.intellij.ui.treeStructure.Tree;
 import listeners.ClassAndMethodChangeListener;
 import model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -25,7 +24,7 @@ public class TreeBuilder {
     private final DefaultMutableTreeNode root;
     private final JTree methodTree;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClassAndMethodChangeListener.class);
+    private static final Logger LOGGER =Logger.getInstance(ClassAndMethodChangeListener.class);
 
 
     public TreeBuilder(Project project) {
@@ -42,7 +41,16 @@ public class TreeBuilder {
             }
         });
         // Set custom selection model
-        methodTree.setSelectionModel(new DefaultTreeSelectionModel() {
+        methodTree.setSelectionModel(getCustomSelectionModel());
+
+        // Allow expanding and collapsing nodes
+        methodTree.setShowsRootHandles(true);
+        methodTree.setRootVisible(false);
+    }
+
+    @NotNull
+    private DefaultTreeSelectionModel getCustomSelectionModel() {
+        return new DefaultTreeSelectionModel() {
             @Override
             public void setSelectionPath(TreePath path) {
                 if (!isRootNode(path)) {
@@ -78,11 +86,7 @@ public class TreeBuilder {
                         .filter(path -> !isRootNode(path))
                         .toArray(TreePath[]::new);
             }
-        });
-
-        // Allow expanding and collapsing nodes
-        methodTree.setShowsRootHandles(true);
-        methodTree.setRootVisible(false);
+        };
     }
 
 
@@ -101,6 +105,8 @@ public class TreeBuilder {
     }
 
     public void buildMethodTree() {
+        root.removeAllChildren();
+
         startDepthFirstSearch(project);
 
         SwingUtilities.invokeLater(() -> {
@@ -158,7 +164,6 @@ public class TreeBuilder {
             DefaultMutableTreeNode classNode = new ClassNode(psiClass);
             for (PsiMethod psiMethod : psiClass.getMethods()) {
                 classNode.add(new MethodNode(psiMethod));
-                CommentStatusCache.getInstance().addMethod(psiMethod);
             }
             root.add(classNode);
         }

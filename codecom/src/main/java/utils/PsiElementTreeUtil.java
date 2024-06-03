@@ -1,6 +1,9 @@
 package utils;
 import com.intellij.psi.PsiElement;
+import listeners.ClassAndMethodChangeListener;
 import model.AbstractTreeNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -10,6 +13,8 @@ import java.util.Enumeration;
 import java.util.List;
 
 public class PsiElementTreeUtil {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(PsiElementTreeUtil.class);
 
     public static TreePath findPathForPsiElement(JTree tree, PsiElement targetElement) {
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) tree.getModel().getRoot();
@@ -60,13 +65,20 @@ public class PsiElementTreeUtil {
 
     // Method to repaint the tree and keep it expanded
     public static void repaintTreeAndKeepExpanded(JTree tree) {
+
+        long startTime = System.nanoTime();  // Start timing
+
+
         // Save the current expansion state
         List<TreePath> expandedPaths = saveExpansionState(tree);
 
-        // Repaint the tree or update its model here
-        // Example: tree.setModel(newModel); or tree.repaint();
+        tree.repaint();
 
         // Restore the expansion state
         restoreExpansionState(tree, expandedPaths);
+        long endTime = System.nanoTime();  // End timing
+        long duration = endTime - startTime;  // Calculate duration in nanoseconds
+
+        LOGGER.info("Tree repaint took {} ms", duration / 1_000_000.0);
     }
 }

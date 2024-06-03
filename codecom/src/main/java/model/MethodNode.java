@@ -15,7 +15,7 @@ public class MethodNode extends AbstractTreeNode<PsiMethod> {
         return hasDocComment;
     }
 
-    private void refreshCommentStatus() {
+    public void refreshCommentStatus() {
         hasDocComment = updateCommentStatus();
     }
 
