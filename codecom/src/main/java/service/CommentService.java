@@ -1,15 +1,17 @@
 package service;
 
-import action.CommentAction;
-import com.github.weisj.jsvg.C;
+import com.intellij.execution.dashboard.actions.RunAction;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.psi.javadoc.PsiDocComment;
+import exceptions.ServerRequestException;
 import httpclient.HttpClientPool;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -49,20 +51,18 @@ public class CommentService {
         return  instance;
     }
 
-    public void generateCommentForMethod(Project project, Document document, PsiMethod method) {
-        String sanitizedMethodText = sanitizeMethodText(method.getText());
-        String result;
-        try {
-            result = getCommentResponse(sanitizedMethodText);
-        } catch (Exception e) {
-            //showing a message is handled at a lower level, we just finish execution.
-            return;
-        }
+    public void generateCommentForMethod(Project project, Document document, PsiMethod method) throws ServerRequestException {
+        String methodText = ApplicationManager.getApplication().runReadAction((Computable<String>) method::getText);
 
-        if (result == null) return;
+        String sanitizedMethodText = sanitizeMethodText(methodText);
+        String result;
+        result = getCommentResponse(sanitizedMethodText);
+
+        if (result == null)
+            throw new ServerRequestException("Server failed to generate a result. Try Again.");
         JSONObject codeComment = new JSONObject(result);
         String commentText = codeComment.getString("summary_text");
-        PsiDocComment docCommentOfMethod = method.getDocComment();
+        PsiDocComment docCommentOfMethod = ApplicationManager.getApplication().runReadAction((Computable<PsiDocComment>) method::getDocComment);
         if (docCommentOfMethod == null) {
             int startOffset = method.getTextRange().getStartOffset();
             newComment(project, document, method, startOffset, commentText);
@@ -98,14 +98,9 @@ public class CommentService {
     }
 
     @Nullable
-    private static String getCommentResponse(String trimmedMethod) throws Exception {
+    private static String getCommentResponse(String trimmedMethod) throws ServerRequestException {
         String result;
-        try {
-            result = HttpClientPool.getInstance().post(RESOURCE_KEY, trimmedMethod);
-        } catch (Exception exception) {
-            Messages.showMessageDialog("Request to the server failed.", "Information", Messages.getInformationIcon());
-            throw exception;
-        }
+        result = HttpClientPool.getInstance().post(RESOURCE_KEY, trimmedMethod);
         return result;
     }
 

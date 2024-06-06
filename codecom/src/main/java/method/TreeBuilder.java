@@ -1,5 +1,6 @@
 package method;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
@@ -7,19 +8,26 @@ import com.intellij.pom.Navigatable;
 import com.intellij.psi.*;
 import com.intellij.ui.treeStructure.Tree;
 import listeners.ClassAndMethodChangeListener;
-import model.*;
+import model.AbstractTreeNode;
+import model.ClassNode;
+import model.DirectoryNode;
+import model.MethodNode;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultTreeSelectionModel;
 import javax.swing.tree.TreePath;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TreeBuilder {
+import static utils.PsiElementTreeUtil.restoreExpansionState;
+import static utils.PsiElementTreeUtil.saveExpansionState;
+
+public class TreeBuilder implements TreeSelectionListener {
     private final Project project;
     private final DefaultMutableTreeNode root;
     private final JTree methodTree;
@@ -32,20 +40,20 @@ public class TreeBuilder {
         this.root = new DefaultMutableTreeNode("Project modules");
         this.methodTree = new Tree(new SortedTreeModel(root));
         this.methodTree.setCellRenderer(new CustomColoredTreeCellRenderer());
-        this.methodTree.addTreeSelectionListener(e->{
-            AbstractTreeNode<?> selectedNode = (AbstractTreeNode<?>) methodTree.getLastSelectedPathComponent();
-            if(selectedNode != null){
-                if(selectedNode.getPsiElement() instanceof Navigatable) {
-                    ((Navigatable) selectedNode.getPsiElement()).navigate(true);
-                }
-            }
-        });
-        // Set custom selection model
+        this.methodTree.addTreeSelectionListener(this);
         methodTree.setSelectionModel(getCustomSelectionModel());
-
-        // Allow expanding and collapsing nodes
         methodTree.setShowsRootHandles(true);
         methodTree.setRootVisible(false);
+    }
+
+    @Override
+    public void valueChanged(TreeSelectionEvent e) {
+        AbstractTreeNode<?> selectedNode = (AbstractTreeNode<?>) methodTree.getLastSelectedPathComponent();
+        if (selectedNode != null) {
+            if (selectedNode.getPsiElement() instanceof Navigatable) {
+                ((Navigatable) selectedNode.getPsiElement()).navigate(true);
+            }
+        }
     }
 
     @NotNull
@@ -53,14 +61,14 @@ public class TreeBuilder {
         return new DefaultTreeSelectionModel() {
             @Override
             public void setSelectionPath(TreePath path) {
-                if (!isRootNode(path)) {
+                if (isRootNode(path)) {
                     super.setSelectionPath(path);
                 }
             }
 
             @Override
             public void addSelectionPath(TreePath path) {
-                if (!isRootNode(path)) {
+                if (isRootNode(path)) {
                     super.addSelectionPath(path);
                 }
             }
@@ -78,12 +86,12 @@ public class TreeBuilder {
             }
 
             private boolean isRootNode(TreePath path) {
-                return path != null && path.getLastPathComponent() == root;
+                return path == null || path.getLastPathComponent() != root;
             }
 
             private TreePath[] filterRootNode(TreePath[] paths) {
                 return Arrays.stream(paths)
-                        .filter(path -> !isRootNode(path))
+                        .filter(this::isRootNode)
                         .toArray(TreePath[]::new);
             }
         };
@@ -94,38 +102,35 @@ public class TreeBuilder {
         return methodTree;
     }
 
-    public void reload(DefaultMutableTreeNode node) {
-        DefaultTreeModel test =  (DefaultTreeModel) methodTree.getModel();
-        test.reload(node);
-    }
-
-    public void reload() {
-        DefaultTreeModel test =  (DefaultTreeModel) methodTree.getModel();
-        test.reload();
-    }
-
     public void buildMethodTree() {
-        root.removeAllChildren();
+        List<TreePath> expansionState = saveExpansionState(methodTree);
 
-        startDepthFirstSearch(project);
+        removeAllDescendants(root);
 
-        SwingUtilities.invokeLater(() -> {
-            ((DefaultTreeModel) methodTree.getModel()).reload(); // Refresh the tree model on the EDT
+        ApplicationManager.getApplication().executeOnPooledThread(()->{
+            startDepthFirstSearch(project);
+
+            SwingUtilities.invokeLater(() -> {
+                ((DefaultTreeModel) methodTree.getModel()).reload(); // Refresh the tree model on the EDT
+                restoreExpansionState(methodTree, expansionState);
+            });
         });
     }
 
     public void startDepthFirstSearch(Project project) {
-        PsiManager psiManager = PsiManager.getInstance(project);
+        ApplicationManager.getApplication().runReadAction(() -> {
+            PsiManager psiManager = PsiManager.getInstance(project);
 
-        ProjectRootManager.getInstance(project).getFileIndex().iterateContent(fileOrDir -> {
-            if (fileOrDir.isDirectory()) {
-                PsiDirectory psiDirectory = psiManager.findDirectory(fileOrDir);
-                if (psiDirectory != null) {
-                    root.add(depthFirstSearch(psiDirectory));  // Start DFS from each root directory
+            ProjectRootManager.getInstance(project).getFileIndex().iterateContent(fileOrDir -> {
+                if (fileOrDir.isDirectory()) {
+                    PsiDirectory psiDirectory = psiManager.findDirectory(fileOrDir);
+                    if (psiDirectory != null) {
+                        root.add(depthFirstSearch(psiDirectory));  // Start DFS from each root directory
+                    }
+                    return false;  // Return false to stop processing this branch with iterateContent
                 }
-                return false;  // Return false to stop processing this branch with iterateContent
-            }
-            return true;
+                return true;
+            });
         });
     }
 
@@ -138,8 +143,6 @@ public class TreeBuilder {
             if (psiFile.getName().endsWith(".java")) {
 
                 if (psiFile instanceof PsiJavaFile psiJavaFile) {
-                    //JavaFileNode javaFileNode = new JavaFileNode(psiFile.getName(), psiJavaFile);
-                    //node.add(javaFileNode);
                     processPsiJavaFile(node, psiJavaFile);
                 }
                 hasJavaFile = true;
@@ -159,31 +162,32 @@ public class TreeBuilder {
     }
 
     private void processPsiJavaFile(DefaultMutableTreeNode root, final PsiJavaFile psiJavaFile){
-        List<PsiClass> psiClassesOfFile = getAllClassesOfPsiJavaFile(psiJavaFile);
-        for (PsiClass psiClass : psiClassesOfFile) {
+        for (PsiClass psiClass : psiJavaFile.getClasses()) {
             DefaultMutableTreeNode classNode = new ClassNode(psiClass);
-            for (PsiMethod psiMethod : psiClass.getMethods()) {
-                classNode.add(new MethodNode(psiMethod));
-            }
+            addDescendantsOfClass(classNode, psiClass);
             root.add(classNode);
         }
     }
 
-    // Method to retrieve all classes, including nested ones, from a PsiJavaFile
-    public static List<PsiClass> getAllClassesOfPsiJavaFile(PsiJavaFile psiJavaFile) {
-        List<PsiClass> allClasses = new ArrayList<>();
-        for (PsiClass psiClass : psiJavaFile.getClasses()) {
-            addClassesRecursively(psiClass, allClasses);
-        }
-        return allClasses;
-    }
-
-    // Helper method to add classes recursively
-    private static void addClassesRecursively(PsiClass psiClass, List<PsiClass> allClasses) {
-        allClasses.add(psiClass);
-        for (PsiClass innerClass : psiClass.getInnerClasses()) {
-            addClassesRecursively(innerClass, allClasses);
+    public void addDescendantsOfClass(DefaultMutableTreeNode parentNode, PsiClass psiClass) {
+        for(PsiElement psiElement : psiClass.getChildren()) {
+            if(psiElement instanceof PsiClass psiInnerClass) {
+                DefaultMutableTreeNode classNode = new ClassNode(psiInnerClass);
+                addDescendantsOfClass(classNode, psiInnerClass);
+                parentNode.add(classNode);
+            } else if (psiElement instanceof PsiMethod psiMethod) {
+                DefaultMutableTreeNode methodNode = new MethodNode(psiMethod);
+                parentNode.add(methodNode);
+            }
         }
     }
 
+    public void removeAllDescendants(DefaultMutableTreeNode root) {
+        if (root != null) {
+            for (int i = root.getChildCount() - 1; i >= 0; i--) {  // Iterate backwards for efficiency
+                removeAllDescendants((DefaultMutableTreeNode) root.getChildAt(i));  // Recursively remove children
+            }
+            root.removeAllChildren();  // Remove children from current node
+        }
+    }
 }

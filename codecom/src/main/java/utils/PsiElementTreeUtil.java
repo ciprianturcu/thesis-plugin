@@ -1,6 +1,5 @@
 package utils;
 import com.intellij.psi.PsiElement;
-import listeners.ClassAndMethodChangeListener;
 import model.AbstractTreeNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,10 +67,8 @@ public class PsiElementTreeUtil {
 
         long startTime = System.nanoTime();  // Start timing
 
-
         // Save the current expansion state
         List<TreePath> expandedPaths = saveExpansionState(tree);
-
         tree.repaint();
 
         // Restore the expansion state

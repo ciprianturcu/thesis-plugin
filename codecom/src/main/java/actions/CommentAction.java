@@ -1,9 +1,10 @@
-package action;
+package actions;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.PlatformDataKeys;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
@@ -46,6 +47,20 @@ public class CommentAction extends AnAction {
             Messages.showMessageDialog("No valid method was selected", "No Valid Method.", Messages.getWarningIcon());
             return;
         }
-        CommentService.getInstance().generateCommentForMethod(project, document, method);
+        try {
+            // Perform the action
+            CommentService.getInstance().generateCommentForMethod(project, document, method);
+        } catch (Exception e) {
+            // Handle the error and display the dialog on the EDT
+            ApplicationManager.getApplication().invokeLater(() -> {
+                // Show the error dialog
+                showErrorDialog(e.getMessage());
+            });
+        }
+    }
+
+    private void showErrorDialog(String message) {
+        // Implement your dialog displaying logic here
+        Messages.showMessageDialog(message, "Error", Messages.getErrorIcon());
     }
 }

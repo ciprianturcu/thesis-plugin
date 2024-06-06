@@ -1,5 +1,6 @@
 package httpclient;
 
+import exceptions.ServerRequestException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.rmi.server.ServerCloneException;
 
 public final class HttpClientPool {
 
@@ -58,29 +60,29 @@ public final class HttpClientPool {
                 .build();
     }
 
-    public String get(String url) throws Exception {
+    public String get(String url) throws ServerRequestException {
         HttpGet httpGet = new HttpGet(url);
         return executeRequest(httpGet);
     }
 
-    public String post(String url, String code) throws Exception {
+    public String post(String url, String code) throws ServerRequestException {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader("Content-Type", "application/json");
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("text", code);
         String json = jsonObject.toString();
-        LOGGER.info(json);
         StringEntity entity = new StringEntity(json, StandardCharsets.UTF_8);
         httpPost.setEntity(entity);
         return executeRequest(httpPost);
     }
 
-    private String executeRequest(HttpRequestBase request) throws Exception {
+    private String executeRequest(HttpRequestBase request) throws ServerRequestException {
         try (CloseableHttpResponse response = httpClient.execute(request)) {
             return EntityUtils.toString(response.getEntity());
         } catch (Exception e) {
             String decodedUrl = URLDecoder.decode(request.getURI().toString(), StandardCharsets.UTF_8);
-            throw new Exception("Error during HTTP request for URL: " + decodedUrl, e);
+            LOGGER.error("Error during HTTP request for URL: {}; error: {} ", decodedUrl ,e.getMessage());
+            throw new ServerRequestException("Request to server failed", e);
         } finally {
             request.releaseConnection();
         }
