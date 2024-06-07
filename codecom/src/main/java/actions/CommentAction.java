@@ -36,7 +36,11 @@ public class CommentAction extends AnAction {
         Document document = editor.getDocument();
 
         PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-        if(psiFile==null) return;
+        if(psiFile==null) {
+            Messages.showMessageDialog("Please try again.", "Could Not Perform Action.", Messages.getErrorIcon());
+            LOGGER.warn("The file of this event could not be retrieved");
+            return;
+        }
 
         SelectionModel selectionModel= editor.getSelectionModel();
         int selectionStart = selectionModel.getSelectionStart();

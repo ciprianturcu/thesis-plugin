@@ -17,22 +17,13 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import settings.PluginSettings;
 import utils.PropertyLoader;
 
 import java.util.Properties;
 
 public class CommentService {
-
-    private static final String PROPERTIES_FILE = "service.properties";
-    private static final String ENDPOINT_KEY = "comment-server-service-endpoint";
-    private static final String RESOURCE_KEY;
     private static final Logger LOGGER = LoggerFactory.getLogger(CommentService.class);
-
-    static {
-        Properties properties = PropertyLoader.loadProperties(PROPERTIES_FILE);
-        String endpoint = properties.getProperty(ENDPOINT_KEY);
-        RESOURCE_KEY = endpoint != null ? endpoint + "/getComment" : "";
-    }
 
     private static volatile CommentService instance = new CommentService();
 
@@ -75,7 +66,7 @@ public class CommentService {
 
     private static void newComment(Project project, Document document, PsiMethod method, int startOffset, String commentText) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
-            document.insertString(startOffset, "/**\n* " + commentText + ".\n*/");
+            document.insertString(startOffset, "/**\n* " + commentText + "\n*/");
             PsiDocumentManager.getInstance(project).commitDocument(document);
             CodeStyleManager.getInstance(project).reformat(method);
         });
@@ -84,7 +75,7 @@ public class CommentService {
     private static void overrideComment(Project project, Document document, PsiMethod method, int startOffset, int oldCommentLength, String commentText) {
         WriteCommandAction.runWriteCommandAction(project, () -> {
             document.deleteString(startOffset, startOffset + oldCommentLength);
-            document.insertString(startOffset, "/**\n* " + commentText + ".\n*/");
+            document.insertString(startOffset, "/**\n* " + commentText + "\n*/");
             PsiDocumentManager.getInstance(project).commitDocument(document);
             CodeStyleManager.getInstance(project).reformat(method);
         });
@@ -99,9 +90,9 @@ public class CommentService {
 
     @Nullable
     private static String getCommentResponse(String trimmedMethod) throws ServerRequestException {
-        String result;
-        result = HttpClientPool.getInstance().post(RESOURCE_KEY, trimmedMethod);
-        return result;
+        PluginSettings settings = PluginSettings.getInstance();
+        String endpoint = settings.serverUrl + "/getComment";
+        return HttpClientPool.getInstance().post(endpoint, trimmedMethod);
     }
 
 }

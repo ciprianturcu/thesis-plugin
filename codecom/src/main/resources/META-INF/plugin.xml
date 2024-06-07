@@ -28,6 +28,9 @@
     <toolWindow id="CodeCom"
                 anchor="right"
                 factoryClass="toolWindow.ToolWindow"/>
+
+    <applicationService serviceImplementation="settings.PluginSettings"/>
+    <projectConfigurable instance="settings.PluginSettingsConfigurable"/>
   </extensions>
 
 

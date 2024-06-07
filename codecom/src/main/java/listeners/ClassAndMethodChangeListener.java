@@ -245,7 +245,7 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
         ClassNode newClassNode = new ClassNode(psiClass);
         parentNode.add(newClassNode);
 
-        treeBuilder.addDescendantsOfClass(parentNode, psiClass);
+        treeBuilder.addDescendantsOfClass(newClassNode, psiClass);
 
         repaintTreeAndKeepExpanded(tree);
     }

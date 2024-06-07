@@ -12,11 +12,15 @@ import com.intellij.psi.PsiFile;
 import model.AbstractTreeNode;
 import model.MethodNode;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import service.CommentService;
 
 import javax.swing.*;
 
 public class CommentNodeAction {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommentNodeAction.class);
 
     public static void performActionOnSelectedMethod(Project project , JTree methodTree) {
         // Get the selected node from the tree
@@ -26,11 +30,15 @@ public class CommentNodeAction {
             if (selectedNode instanceof MethodNode methodNode) {
                 PsiFile psiFile = methodNode.getPsiElement().getContainingFile();
                 if (psiFile == null) {
+                    Messages.showMessageDialog("Please try again.", "Could Not Perform Action.", Messages.getErrorIcon());
+                    LOGGER.warn("The file of this event could not be retrieved");
                     return;
                 }
 
                 Document document = PsiDocumentManager.getInstance(project).getDocument(psiFile);
                 if (document == null) {
+                    Messages.showMessageDialog("Please try again.", "Could Not Perform Action.", Messages.getErrorIcon());
+                    LOGGER.warn("The document for this file could not be retrieved");
                     return;
                 }
                 if (methodNode.hasDocComment()) {
@@ -68,6 +76,14 @@ public class CommentNodeAction {
                     }
                 });
             }
+            else {
+                Messages.showMessageDialog("Wrong node type selected! Please select a method node.", "Could Not Perform Action.", Messages.getErrorIcon());
+                LOGGER.warn("No node was selected");
+            }
+        }
+        else {
+            Messages.showMessageDialog("No node selected! Please select a method node.", "Could Not Perform Action.", Messages.getErrorIcon());
+            LOGGER.warn("Wrong type of node was selected");
         }
     }
     private static void showErrorDialog(String message) {
