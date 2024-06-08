@@ -1,11 +1,9 @@
 package service;
 
-import com.intellij.execution.dashboard.actions.RunAction;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiMethod;
@@ -18,10 +16,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import settings.PluginSettings;
-import utils.PropertyLoader;
-
-import java.util.Properties;
-
 public class CommentService {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommentService.class);
 

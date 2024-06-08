@@ -1,4 +1,4 @@
-package method;
+package methodTree;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.ui.ColoredTreeCellRenderer;
@@ -8,7 +8,6 @@ import model.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 public class CustomColoredTreeCellRenderer extends ColoredTreeCellRenderer {
     @Override

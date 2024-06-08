@@ -7,7 +7,7 @@ import com.intellij.psi.impl.source.PsiJavaFileImpl;
 import com.intellij.psi.impl.source.PsiMethodImpl;
 import com.intellij.psi.impl.source.PsiUnnamedClassImpl;
 import com.intellij.psi.impl.source.javadoc.PsiDocCommentImpl;
-import method.TreeBuilder;
+import methodTree.TreeBuilder;
 import model.AbstractTreeNode;
 import model.ClassNode;
 import model.DirectoryNode;
@@ -40,25 +40,15 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     @Override
     public void beforeChildRemoval(@NotNull PsiTreeChangeEvent event) {
         PsiElement eventChild = event.getChild();
-        PsiElement eventParent = event.getParent();
-        LOGGER.info("before child removal  - element: {} | child: {} | parent: {}", event.getElement(), eventChild.getClass(), eventParent.getClass());
         if (eventChild instanceof PsiJavaDirectoryImpl) {
             removePsiElementFromTree(eventChild);
         }
     }
 
     @Override
-    public void beforeChildAddition(@NotNull PsiTreeChangeEvent event) {
-        PsiElement eventParent = event.getParent();
-        LOGGER.info("before child addition  - element: {} | parent: {}", event.getElement(), eventParent.getClass());
-    }
-
-    @Override
     public void childAdded(PsiTreeChangeEvent event) {
         PsiElement eventChild = event.getChild();
         PsiElement eventParent = event.getParent();
-        LOGGER.info("child added - element: {} | child: {} | parent: {}", event.getElement(), eventChild.getClass(), eventParent.getClass());
-
         if (eventChild instanceof PsiJavaDirectoryImpl) {
             addPsiDirectory(eventChild, eventParent);
         } else if (eventChild instanceof PsiJavaFileImpl) {
@@ -73,7 +63,6 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     @Override
     public void childRemoved(@NotNull PsiTreeChangeEvent event) {
         PsiElement eventChild = event.getChild();
-        LOGGER.info("child removed - {}", eventChild.getClass());
         if (eventChild instanceof PsiDocCommentImpl) {
             refreshMethodCommentStatus((PsiMethod) event.getParent());
         } else if (eventChild instanceof PsiMethodImpl) {
@@ -90,7 +79,6 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     @Override
     public void childReplaced(@NotNull PsiTreeChangeEvent event) {
         PsiElement element = event.getChild();
-        LOGGER.info("child replaced - element: {},oldChild: {}, child : {}, parent: {}", event.getElement(), event.getOldChild(), element.getClass(), event.getParent());
         if (event.getOldChild() instanceof PsiField && element instanceof PsiMethodImpl) {
             addPsiMethodToTree(element, event.getParent());
         }
@@ -114,15 +102,8 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     }
 
     @Override
-    public void childMoved(@NotNull PsiTreeChangeEvent event) {
-        PsiElement element = event.getChild();
-        LOGGER.info("child moved - {}", element.getClass());
-    }
-
-    @Override
     public void childrenChanged(@NotNull PsiTreeChangeEvent event) {
         PsiElement element = event.getParent();
-        LOGGER.info("children changed - {}, {}", element.getClass(), element.getChildren());
         if (element instanceof PsiMethodImpl) {
             refreshMethodCommentStatus((PsiMethod) element);
         }
@@ -134,7 +115,6 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     private void refreshMethodCommentStatus(PsiMethod psiMethod) {
         JTree tree = treeBuilder.getMethodTree();
         TreePath methodPath = PsiElementTreeUtil.findPathForPsiElement(tree, psiMethod);
-
         if (methodPath != null) {
             AbstractTreeNode<?> abstractTreeNode = (AbstractTreeNode<?>) methodPath.getLastPathComponent();
             MethodNode methodNode = (MethodNode) abstractTreeNode;
@@ -196,12 +176,9 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
         JTree tree = treeBuilder.getMethodTree();
         for (PsiClass psiClass : psiJavaFile.getClasses()) {
             if (PsiElementTreeUtil.findPathForPsiElement(tree, psiClass) != null) {
-                LOGGER.info(psiClass.getName());
-                LOGGER.info(Arrays.toString(psiClass.getMethods()));
                 return; // Skip adding as it's already there
 
             }
-            LOGGER.info("nu exista deja, {}, {}", psiClass.getName(), Arrays.toString(psiClass.getMethods()));
             addPsiClassToTree(psiClass, eventParent);
         }
         repaintTreeAndKeepExpanded(treeBuilder.getMethodTree());

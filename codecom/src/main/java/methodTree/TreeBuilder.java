@@ -1,4 +1,4 @@
-package method;
+package methodTree;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;

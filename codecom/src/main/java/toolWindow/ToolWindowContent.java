@@ -6,7 +6,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiTreeChangeListener;
 import listeners.ClassAndMethodChangeListener;
-import method.TreeBuilder;
+import methodTree.TreeBuilder;
 
 import javax.swing.*;
 import java.awt.*;
