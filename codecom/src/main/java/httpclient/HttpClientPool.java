@@ -48,6 +48,7 @@ public final class HttpClientPool {
         return instance;
     }
 
+    /***/
     private CloseableHttpClient createHttpClient() {
         RequestConfig requestConfig = RequestConfig.custom()
                 .setConnectionRequestTimeout(CONNECTION_TIMEOUT)
@@ -60,6 +61,7 @@ public final class HttpClientPool {
                 .build();
     }
 
+    /***/
     public String get(String url) throws ServerRequestException {
         HttpGet httpGet = new HttpGet(url);
         return executeRequest(httpGet);

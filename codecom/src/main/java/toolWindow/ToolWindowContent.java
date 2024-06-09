@@ -36,10 +36,7 @@ public class ToolWindowContent extends JPanel implements Disposable{
 
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         refreshButton.addActionListener(e -> rebuildMethodTree());
-        JButton button = new JButton(AllIcons.Actions.Refresh);
-        button.addActionListener(e -> repaintTreeAndKeepExpanded(treeBuilder.getMethodTree()));
         topPanel.add(refreshButton);
-        topPanel.add(button);
         add(topPanel, BorderLayout.NORTH);
 
         //TreeBuilder treeBuilder = new TreeBuilder(project);// Use the tree model from the previous steps

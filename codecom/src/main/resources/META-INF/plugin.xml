@@ -38,6 +38,7 @@
     <action id="actions.CommentAction" class="actions.CommentAction" text="Comment method"
             description="Generate an AI comment for the selected method">
       <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+      <add-to-group group-id="ToolsMenu" anchor="last"/>
     </action>
   </actions>
 </idea-plugin>

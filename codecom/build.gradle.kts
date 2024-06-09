@@ -52,4 +52,21 @@ tasks {
   publishPlugin {
     token.set(System.getenv("PUBLISH_TOKEN"))
   }
+
+  // Custom JAR task
+  register<Jar>("customJar") {
+    archiveBaseName.set("CodeCom")
+    destinationDirectory.set(file("${layout.buildDirectory}/libs"))
+    from(sourceSets.main.get().output)
+    from({
+      configurations.runtimeClasspath.get().filter { it.exists() }.map { if (it.isDirectory) it else zipTree(it) }
+    })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+  }
+
+  buildPlugin {
+    dependsOn("customJar")
+  }
 }
+
+
