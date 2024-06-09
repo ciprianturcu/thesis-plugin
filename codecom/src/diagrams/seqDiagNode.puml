@@ -1,0 +1,77 @@
+@startuml
+
+actor User
+participant "MethodView ToolWindow" as ToolWindow
+participant "IDE Editor" as Editor
+participant "Comment Node Action" as Action
+participant "Warning Dialog" as Dialog
+participant "Error Dialog" as ErrorDialog
+participant "CommentService" as Service
+
+User -> ToolWindow : View MethodView ToolWindow
+User -> ToolWindow : Select Node
+ToolWindow -> Editor : Navigate to Selected Node
+User -> ToolWindow : Press Comment Method Button
+ToolWindow -> Action : Trigger CommentAction
+
+alt No Node Selected
+    Action -> ToolWindow : Get Selected Node
+    ToolWindow -> Action : Return Null
+    Action -> ErrorDialog : Show "No node selected" Warning
+    ErrorDialog -> User : Display OK
+    User -> ErrorDialog : Press OK
+    ErrorDialog -> Action : Terminate Action
+else Node Selected
+    Action -> ToolWindow : Get Selected Node
+    ToolWindow -> Action : Return Selected Node
+
+    alt Node Not a MethodNode
+        Action -> ErrorDialog : Show "Wrong node type selected! Please select a method node." Warning
+        ErrorDialog -> User : Display OK
+        User -> ErrorDialog : Press OK
+        ErrorDialog -> Action : Terminate Action
+    else Node Is a MethodNode
+        Action -> ToolWindow : Get PsiFile from Node
+        ToolWindow -> Action : Return PsiFile
+
+        alt PsiFile Is Null
+            Action -> ErrorDialog : Show "File could not be retrieved" Warning
+            ErrorDialog -> User : Display OK
+            User -> ErrorDialog : Press OK
+            ErrorDialog -> Action : Terminate Action
+        else PsiFile Retrieved
+            Action -> ToolWindow : Get Document from PsiFile
+            ToolWindow -> Action : Return Document
+
+            alt Document Is Null
+                Action -> ErrorDialog : Show "Document could not be retrieved" Warning
+                ErrorDialog -> User : Display OK
+                User -> ErrorDialog : Press OK
+                ErrorDialog -> Action : Terminate Action
+            else Document Retrieved
+                Action -> Action : Check if Method Already Commented
+
+                alt Method Already Commented
+                    Action -> Dialog : Show Override Warning
+                    Dialog -> User : Display OK/Cancel Options
+                    alt User Presses OK
+                        User -> Dialog : Press OK
+                        Dialog -> Action : Confirm Override
+                        Action -> Service : Request Comment Generation
+                        Service -> Action : Return Generated Comment
+                        Action -> Editor : Insert Generated Comment
+                    else User Presses Cancel
+                        User -> Dialog : Press Cancel
+                        Dialog -> Action : Terminate Action
+                    end
+                else Method Not Commented
+                    Action -> Service : Request Comment Generation
+                    Service -> Action : Return Generated Comment
+                    Action -> Editor : Insert Generated Comment
+                end
+            end
+        end
+    end
+end
+
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+
+actor User
+participant "IDE Settings" as IDE
+participant "CodeCom Settings Page" as SettingsPage
+participant "Plugin Configuration" as Config
+
+User -> IDE : Open Settings
+IDE -> User : Display Settings Menu
+
+User -> IDE : Navigate to CodeCom Settings
+IDE -> SettingsPage : Display CodeCom Settings Page
+
+User -> SettingsPage : Update Server URL
+
+User -> SettingsPage : Press OK/Apply
+SettingsPage -> Config : Save Configuration
+Config -> SettingsPage : Confirm Save
+
+User -> SettingsPage : Press Cancel
+SettingsPage -> Config : Discard Changes
+Config -> SettingsPage : Confirm Discard
+
+@enduml

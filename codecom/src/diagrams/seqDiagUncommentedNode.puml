@@ -1,0 +1,18 @@
+@startuml
+
+actor User
+participant "MethodView ToolWindow" as ToolWindow
+participant "IDE Editor" as Editor
+participant "Comment Node Action" as Action
+participant "CommentService" as Service
+
+User -> ToolWindow : View MethodView ToolWindow
+User -> ToolWindow : Select Uncommented Node
+ToolWindow -> Editor : Navigate to Selected Node
+User -> ToolWindow : Press Comment Method Button
+ToolWindow -> Action : Trigger Comment Node Action
+Action -> Service : Request Comment Generation
+Service -> Action : Return Generated Comment
+Action -> Editor : Insert Generated Comment
+
+@enduml

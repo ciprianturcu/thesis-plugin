@@ -26,6 +26,17 @@ dependencies {
   // SLF4J Implementation: Logback
   implementation ("ch.qos.logback:logback-classic:1.5.6")
   implementation ("org.json:json:20240303")
+
+  // JUnit 5
+  testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.3")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+
+  // Mockito
+  testImplementation("org.mockito:mockito-core:4.8.0")
+  testImplementation("org.mockito:mockito-junit-jupiter:4.8.0")
+
+  // IntelliJ Testing Framework
+  testImplementation("com.jetbrains:ideaIC:2023.3")
 }
 
 tasks {
@@ -36,6 +47,10 @@ tasks {
   }
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
+  }
+
+  test {
+    useJUnitPlatform()
   }
 
   patchPluginXml {

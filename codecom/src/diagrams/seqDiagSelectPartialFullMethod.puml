@@ -1,0 +1,64 @@
+@startuml
+
+actor User
+participant "IDE Editor" as Editor
+participant "Tools Menu" as Tools
+participant "CommentAction" as Action
+participant "Warning Dialog" as Dialog
+participant "Error Dialog" as ErrorDialog
+participant "CommentService" as Service
+participant "No Selection Dialog" as NoSelectionDialog
+
+User -> Editor : Select Partial/Full Commented Method Text
+User -> Tools : Select "Comment Method" Option
+Tools -> Action : Trigger CommentAction
+
+alt Editor Could Not Retrieved
+    Action -> Editor : Get Editor
+    Editor -> Action : Return Null
+    Action -> ErrorDialog : Show "Could Not Perform Action" Warning
+    ErrorDialog -> User : Display OK
+    User -> ErrorDialog : Press OK
+    ErrorDialog -> Action : Terminate Action
+else File Could Not Retrieved
+    Action -> Editor : Get Editor
+    Editor -> Action : Return Valid Editor
+    Action -> Editor : Get PsiFile
+    Editor -> Action : Return Null
+    Action -> ErrorDialog : Show "Could Not Perform Action" Warning
+    ErrorDialog -> User : Display OK
+    User -> ErrorDialog : Press OK
+    ErrorDialog -> Action : Terminate Action
+else Valid Method Selected
+    Action -> Editor : Get Selected Text
+    Editor -> Action : Return Selected Text
+    Action -> Action : Check if Method Already Commented
+
+     alt Method Already Commented
+            Action -> Dialog : Show Override Warning
+            Dialog -> User : Display OK/Cancel Options
+            alt User Presses OK
+                        User -> Dialog : Press OK
+                        Dialog -> Action : Confirm Override
+                        Action -> Service : Request Comment Generation
+                        Service -> Action : Return Generated Comment
+                        Action -> Editor : Insert Generated Comment
+                    else User Presses Cancel
+                        User -> Dialog : Press Cancel
+                        Dialog -> Action : Terminate Action
+                    end
+        else Method Not Commented
+            Action -> Service : Request Comment Generation
+            Service -> Action : Return Generated Comment
+            Action -> Editor : Insert Generated Comment
+        end
+else No Valid Method Selected
+    Action -> Editor : Get Selected Text
+    Editor -> Action : Return No Selection
+    Action -> NoSelectionDialog : Show "No valid method selected" Warning
+    NoSelectionDialog -> User : Display OK
+    User -> NoSelectionDialog : Press OK
+    NoSelectionDialog -> Action : End Action
+end
+
+@enduml

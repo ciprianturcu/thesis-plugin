@@ -64,7 +64,7 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     public void childRemoved(@NotNull PsiTreeChangeEvent event) {
         PsiElement eventChild = event.getChild();
         if (eventChild instanceof PsiDocCommentImpl) {
-            refreshMethodCommentStatus((PsiMethod) event.getParent());
+            refreshMethodCommentStatus(event.getParent());
         } else if (eventChild instanceof PsiMethodImpl) {
             removePsiElementFromTree(eventChild);
         } else if (eventChild instanceof PsiClassImpl) {
@@ -83,7 +83,7 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
             addPsiMethodToTree(element, event.getParent());
         }
         if ((event.getOldChild() instanceof PsiDocCommentImpl || event.getChild() instanceof PsiDocCommentImpl) && event.getParent() instanceof PsiMethod) {
-            refreshMethodCommentStatus((PsiMethod) event.getParent());
+            refreshMethodCommentStatus(event.getParent());
         }
         if (event.getOldChild() instanceof PsiModifierList && event.getChild() instanceof PsiClassImpl) {
             addPsiClassToTree(event.getChild(), event.getParent());
@@ -105,22 +105,27 @@ public class ClassAndMethodChangeListener extends PsiTreeChangeAdapter {
     public void childrenChanged(@NotNull PsiTreeChangeEvent event) {
         PsiElement element = event.getParent();
         if (element instanceof PsiMethodImpl) {
-            refreshMethodCommentStatus((PsiMethod) element);
+            refreshMethodCommentStatus(element);
         }
         if (element instanceof PsiJavaFileImpl) {
             addPsiJavaFile(element, element.getParent());
         }
     }
 
-    private void refreshMethodCommentStatus(PsiMethod psiMethod) {
+    private void refreshMethodCommentStatus(PsiElement psiElement) {
         JTree tree = treeBuilder.getMethodTree();
-        TreePath methodPath = PsiElementTreeUtil.findPathForPsiElement(tree, psiMethod);
-        if (methodPath != null) {
-            AbstractTreeNode<?> abstractTreeNode = (AbstractTreeNode<?>) methodPath.getLastPathComponent();
-            MethodNode methodNode = (MethodNode) abstractTreeNode;
-            methodNode.refreshCommentStatus();
+        TreePath elementPath = PsiElementTreeUtil.findPathForPsiElement(tree, psiElement);
+        if (elementPath != null) {
+            AbstractTreeNode<?> abstractTreeNode = (AbstractTreeNode<?>) elementPath.getLastPathComponent();
+            if(abstractTreeNode instanceof MethodNode methodNode)
+            {
+                methodNode.refreshCommentStatus();
+            }
+            else{
+                LOGGER.warn("Node was not a psi method: {}", psiElement);
+            }
         } else {
-            LOGGER.warn("Node not found for PSI element: {}", psiMethod);
+            LOGGER.warn("Node not found for PSI element: {}", psiElement);
         }
     }
 

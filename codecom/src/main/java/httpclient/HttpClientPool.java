@@ -61,12 +61,6 @@ public final class HttpClientPool {
                 .build();
     }
 
-    /***/
-    public String get(String url) throws ServerRequestException {
-        HttpGet httpGet = new HttpGet(url);
-        return executeRequest(httpGet);
-    }
-
     public String post(String url, String code) throws ServerRequestException {
         HttpPost httpPost = new HttpPost(url);
         httpPost.setHeader("Content-Type", "application/json");

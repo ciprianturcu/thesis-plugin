@@ -1,0 +1,21 @@
+@startuml
+top to bottom direction
+
+skinparam packageStyle rectangle
+skinparam defaultFontSize 14
+skinparam dpi 150 // Adjust for better scaling
+
+package actions {
+    class CommentAction {
+        - static final Logger LOGGER
+        + void actionPerformed(@NotNull AnActionEvent event)
+        - void showErrorDialog(String message)
+    }
+
+    class CommentNodeAction {
+        - static final Logger LOGGER
+        + static void performActionOnSelectedMethod(Project project, JTree methodTree)
+        - static void showErrorDialog(String message)
+    }
+}
+@enduml

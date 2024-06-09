@@ -1,0 +1,34 @@
+@startuml
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam defaultFontSize 14
+skinparam dpi 150 // Adjust for better scaling
+
+actor "USER" as user
+actor "CCG Engine" as generator
+
+rectangle "Comment Generation" {
+    usecase "View MethodView\n Tool Window" as UC1
+    usecase "Partially/Fully Select \n Method Text" as UC2
+    usecase "Select Node \n Of Method View"  as UC4
+    usecase "Generate Comment" as UC6
+    usecase "Confirm override\n of existing comment" as UC7
+    usecase "Check if comment exists" as UC_Check
+}
+
+rectangle "Settings" {
+    usecase "Set server url settings" as UCS
+}
+user-UCS
+user -- UC1
+user -- UC2
+UC1 -right-> UC4
+UC2 -left-> UC_Check
+UC_Check -down-> UC7 : "Comment exists"
+UC_Check -down-> UC6 : "No comment"
+UC4 -right-> UC_Check
+UC7 ..> UC6 :<<includes>>
+UC6 ..> generator :<<calls>>
+
+@enduml

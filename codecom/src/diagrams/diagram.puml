@@ -1,0 +1,160 @@
+@startuml
+
+package "Comment Functionality" {
+    class CommentAction {
+        +actionPerformed(AnActionEvent e)
+    }
+
+    class CommentNodeAction {
+        +actionPerformed(AnActionEvent e)
+    }
+
+    class CommentService {
+        +generateCommentForMethod(Project project, Document document, PsiMethod method)
+        +getInstance(): CommentService
+        -newComment(Project project, Document document, PsiMethod method, int startOffset, String commentText)
+        -overrideComment(Project project, Document document, PsiMethod method, int startOffset, int oldCommentLength, String commentText)
+        -sanitizeMethodText(String methodText): String
+        -getCommentResponse(String trimmedMethod): String
+    }
+
+    class ServerRequestException {
+        +ServerRequestException(String message)
+        +ServerRequestException(String message, Throwable cause)
+    }
+}
+
+package "Tree Structure" {
+    abstract class AbstractTreeNode {
+        +name: String
+        +children: List<AbstractTreeNode>
+        +addChild(AbstractTreeNode node)
+        +getName(): String
+        +getChildren(): List<AbstractTreeNode>
+    }
+
+    class ClassNode {
+        +className: String
+        +ClassNode(String className)
+        +getClassName(): String
+    }
+
+    class DirectoryNode {
+        +directoryName: String
+        +DirectoryNode(String directoryName)
+        +getDirectoryName(): String
+    }
+
+    class MethodNode {
+        +methodName: String
+        +MethodNode(String methodName)
+        +getMethodName(): String
+        +hasDocComment(): boolean
+    }
+
+    class SortedTreeModel {
+        +SortedTreeModel(TreeNode root)
+        -sortNodes()
+    }
+
+    class TreeBuilder {
+        +TreeBuilder(Project project)
+        +buildTree()
+        -addNode(AbstractTreeNode node)
+        +getMethodTree(): JTree
+        +addDescendantsOfClass(ClassNode classNode, PsiClass psiClass)
+    }
+
+    class CustomColoredTreeCellRenderer {
+        +customizeCellRenderer(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        -getAttributes(AbstractTreeNode treeNode): SimpleTextAttributes
+        -getIconFor(AbstractTreeNode treeNode): Icon
+    }
+}
+
+package "IDE Integration" {
+    class ToolWindow {
+        +createToolWindowContent(Project project, ToolWindow toolWindow)
+    }
+
+    class ToolWindowContent {
+        +ToolWindowContent(Project project)
+        +initializeUI()
+        +initializeListeners()
+        +rebuildMethodTree()
+        +dispose()
+        +commentButton: JButton
+        +refreshButton: JButton
+        +treeBuilder: TreeBuilder
+        +psiTreeChangeListener: PsiTreeChangeListener
+        +dispose()
+    }
+
+    class PsiElementTreeUtil {
+        +findElement(PsiElement element): PsiElement
+        -isValidElement(PsiElement element): boolean
+        +repaintTreeAndKeepExpanded(JTree tree)
+        +findPathForPsiElement(JTree tree, PsiElement element): TreePath
+    }
+
+    class ClassAndMethodChangeListener {
+        +ClassAndMethodChangeListener(TreeBuilder treeBuilder)
+        +beforeChildRemoval(PsiTreeChangeEvent event)
+        +beforeChildAddition(PsiTreeChangeEvent event)
+        +childAdded(PsiTreeChangeEvent event)
+        +childRemoved(PsiTreeChangeEvent event)
+        +childReplaced(PsiTreeChangeEvent event)
+        +childMoved(PsiTreeChangeEvent event)
+        +childrenChanged(PsiTreeChangeEvent event)
+        -refreshMethodCommentStatus(PsiMethod psiMethod)
+        -addPsiDirectory(PsiElement psiDirectoryElement, PsiElement eventParent)
+        -addPsiJavaFile(PsiElement psiJavaFileElement, PsiElement eventParent)
+        -addPsiClassToTree(PsiElement psiClassElement, PsiElement eventParent)
+        -addPsiMethodToTree(PsiElement psiMethod, PsiElement eventParent)
+        -getParentElement(PsiElement element): PsiElement
+        -createNodeForElement(PsiElement element): DefaultMutableTreeNode
+        -removePsiElementFromTree(PsiElement psiElement)
+        -removeAllDescendants(DefaultMutableTreeNode node)
+    }
+}
+
+package "Utility" {
+    class PropertyLoader {
+        +loadProperties(String filePath): Properties
+        -parseProperties(String content): Properties
+    }
+
+    class HttpClientPool {
+        +getClient(): HttpClient
+        -releaseClient(HttpClient client)
+        +post(String url, String body): String
+    }
+}
+
+CommentAction --> CommentService : uses
+CommentNodeAction --> CommentService : uses
+CommentNodeAction --> ServerRequestException : handles
+CommentService --> HttpClientPool : uses
+CommentService --> PropertyLoader : uses
+SortedTreeModel *-- AbstractTreeNode : contains
+ClassNode --|> AbstractTreeNode : extends
+DirectoryNode --|> AbstractTreeNode : extends
+MethodNode --|> AbstractTreeNode : extends
+TreeBuilder --> SortedTreeModel : builds
+TreeBuilder --> ClassNode : adds
+TreeBuilder --> MethodNode : adds
+TreeBuilder --> DirectoryNode : adds
+ToolWindow *-- ToolWindowContent : contains
+ToolWindow --> ClassAndMethodChangeListener : uses
+PsiElementTreeUtil --> AbstractTreeNode : uses
+PsiElementTreeUtil --> TreeBuilder : assists
+CustomColoredTreeCellRenderer --> MethodNode : uses
+CustomColoredTreeCellRenderer --> DirectoryNode : uses
+CustomColoredTreeCellRenderer --> ClassNode : uses
+CustomColoredTreeCellRenderer --> AbstractTreeNode : uses
+ToolWindowContent --> TreeBuilder : uses
+ToolWindowContent --> PsiElementTreeUtil : uses
+ClassAndMethodChangeListener --> TreeBuilder : uses
+ClassAndMethodChangeListener --> PsiElementTreeUtil : uses
+
+@enduml

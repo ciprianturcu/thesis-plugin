@@ -1,0 +1,47 @@
+@startuml
+top to bottom direction
+
+skinparam packageStyle rectangle
+skinparam defaultFontSize 14
+skinparam dpi 150 // Adjust for better scaling
+
+package service {
+    class CommentService {
+        - static final Logger LOGGER
+        - static volatile CommentService instance
+        + static CommentService getInstance()
+        + void generateCommentForMethod(Project project, Document document, PsiMethod method) throws ServerRequestException
+        - static void newComment(Project project, Document document, PsiMethod method, int startOffset, String commentText)
+        - static void overrideComment(Project project, Document document, PsiMethod method, int startOffset, int oldCommentLength, String commentText)
+        - String sanitizeMethodText(String methodText)
+        - static String getCommentResponse(String trimmedMethod) throws ServerRequestException
+    }
+}
+
+package exceptions {
+    class ServerRequestException {
+        + ServerRequestException(String message)
+        + ServerRequestException(String message, Throwable cause)
+    }
+}
+
+package httpclient {
+    class HttpClientPool {
+        - static volatile HttpClientPool instance
+        - final PoolingHttpClientConnectionManager connectionManager
+        - final CloseableHttpClient httpClient
+        - static final int CONNECTION_TIMEOUT
+        - static final int SOCKET_TIMEOUT
+        - static final Logger LOGGER
+        + static HttpClientPool getInstance()
+        - CloseableHttpClient createHttpClient()
+        + String post(String url, String code) throws ServerRequestException
+        - String executeRequest(HttpRequestBase request) throws ServerRequestException
+        + void shutdown()
+    }
+}
+
+service.CommentService --> httpclient.HttpClientPool : uses
+service.CommentService --> exceptions.ServerRequestException : throws
+httpclient.HttpClientPool --> exceptions.ServerRequestException : throws
+@enduml

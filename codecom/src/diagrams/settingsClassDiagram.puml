@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+
+class PluginSettings {
+    - String serverUrl
+    + static PluginSettings getInstance()
+    + PluginSettings getState()
+    + void loadState(PluginSettings state)
+}
+
+class PluginSettingsConfigurable {
+    - JTextField serverUrlField
+    + String getDisplayName()
+    + JComponent createComponent()
+    + boolean isModified()
+    + void apply()
+    + void reset()
+}
+
+PluginSettingsConfigurable --> PluginSettings : uses
+
+@enduml

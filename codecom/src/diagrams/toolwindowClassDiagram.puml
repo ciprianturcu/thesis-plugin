@@ -1,0 +1,138 @@
+@startuml
+top to bottom direction
+
+skinparam packageStyle rectangle
+skinparam defaultFontSize 14
+skinparam dpi 150 // Adjust for better scaling
+
+package listeners {
+    class ClassAndMethodChangeListener {
+        - TreeBuilder treeBuilder
+        - static Logger LOGGER
+        + ClassAndMethodChangeListener(TreeBuilder treeBuilder)
+        + void beforeChildRemoval(PsiTreeChangeEvent event)
+        + void beforeChildAddition(PsiTreeChangeEvent event)
+        + void childAdded(PsiTreeChangeEvent event)
+        + void childRemoved(PsiTreeChangeEvent event)
+        + void childReplaced(PsiTreeChangeEvent event)
+        + void childMoved(PsiTreeChangeEvent event)
+        + void childrenChanged(PsiTreeChangeEvent event)
+        - void refreshMethodCommentStatus(PsiMethod psiMethod)
+        - void addPsiDirectory(PsiElement psiDirectoryElement, PsiElement eventParent)
+        - void addPsiJavaFile(PsiElement psiJavaFileElement, PsiElement eventParent)
+        - void addPsiClassToTree(PsiElement psiClassElement, PsiElement eventParent)
+        - void addPsiMethodToTree(PsiElement psiMethod, PsiElement eventParent)
+        - PsiElement getParentElement(PsiElement element)
+        - DefaultMutableTreeNode createNodeForElement(PsiElement element)
+        - void removePsiElementFromTree(PsiElement psiElement)
+        - void removeAllDescendants(DefaultMutableTreeNode node)
+    }
+}
+
+package methodTree {
+    class CustomColoredTreeCellRenderer {
+        + void customizeCellRenderer(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus)
+        - SimpleTextAttributes getAttributes(AbstractTreeNode treeNode)
+        - Icon getIconFor(AbstractTreeNode treeNode)
+    }
+
+    class SortedTreeModel {
+        + SortedTreeModel(TreeNode root)
+        + Object getChild(Object parent, int index)
+        + int getChildCount(Object parent)
+        - List<TreeNode> getSortedChildren(DefaultMutableTreeNode parent)
+    }
+
+    class TreeBuilder {
+        - Project project
+        - DefaultMutableTreeNode root
+        - JTree methodTree
+        + TreeBuilder(Project project)
+        + void valueChanged(TreeSelectionEvent e)
+        + JTree getMethodTree()
+        + void buildMethodTree()
+        + void startDepthFirstSearch(Project project)
+        + DefaultMutableTreeNode depthFirstSearch(PsiDirectory psiDirectory)
+        + void addDescendantsOfClass(DefaultMutableTreeNode parentNode, PsiClass psiClass)
+        + void removeAllDescendants(DefaultMutableTreeNode root)
+        - DefaultTreeSelectionModel getCustomSelectionModel()
+        - void processPsiJavaFile(DefaultMutableTreeNode root, PsiJavaFile psiJavaFile)
+    }
+}
+
+package model {
+    abstract class AbstractTreeNode {
+        - PsiElement psiElement
+        + AbstractTreeNode(PsiElement psiElement)
+        + String getLabel()
+        + PsiElement getPsiElement()
+        + String toString()
+    }
+
+    class ClassNode {
+        + ClassNode(PsiClass psiElement)
+        + String getLabel()
+        + String toString()
+    }
+
+    class DirectoryNode {
+        + DirectoryNode(PsiDirectory psiDirectory)
+        + String getLabel()
+        + String toString()
+    }
+
+    class MethodNode {
+        - boolean hasDocComment
+        + MethodNode(PsiMethod psiMethod)
+        + boolean hasDocComment()
+        + void refreshCommentStatus()
+        - boolean updateCommentStatus()
+        + String getLabel()
+        + String toString()
+    }
+}
+
+package toolWindow {
+    class ToolWindow {
+        + void createToolWindowContent(Project project, com.intellij.openapi.wm.ToolWindow toolWindow)
+    }
+
+    class ToolWindowContent {
+        - Project project
+        - JButton commentButton
+        - JButton refreshButton
+        - TreeBuilder treeBuilder
+        - PsiTreeChangeListener psiTreeChangeListener
+        + ToolWindowContent(Project project)
+        + void dispose()
+        - void initializeUI()
+        - void initializeListeners()
+        - void rebuildMethodTree()
+    }
+}
+
+package utils {
+    class PsiElementTreeUtil {
+        + static TreePath findPathForPsiElement(JTree tree, PsiElement targetElement)
+        + static List<TreePath> saveExpansionState(JTree tree)
+        + static void restoreExpansionState(JTree tree, List<TreePath> expandedPaths)
+        + static void repaintTreeAndKeepExpanded(JTree tree)
+    }
+}
+
+listeners.ClassAndMethodChangeListener ..> methodTree.TreeBuilder : uses
+methodTree.CustomColoredTreeCellRenderer ..> model.AbstractTreeNode : uses
+methodTree.TreeBuilder *-down- model.ClassNode : contains
+methodTree.TreeBuilder *-up- model.DirectoryNode : contains
+methodTree.TreeBuilder *-up- model.MethodNode : contains
+model.ClassNode -up-|> model.AbstractTreeNode : extends
+model.DirectoryNode -down-|> model.AbstractTreeNode : extends
+model.MethodNode -left-|> model.AbstractTreeNode : extends
+toolWindow.ToolWindow --> toolWindow.ToolWindowContent : creates
+methodTree.TreeBuilder .right.> methodTree.SortedTreeModel : uses
+methodTree.TreeBuilder ..> methodTree.CustomColoredTreeCellRenderer : uses
+toolWindow.ToolWindowContent *-- methodTree.TreeBuilder : contains
+toolWindow.ToolWindowContent *-- listeners.ClassAndMethodChangeListener : contains
+methodTree.TreeBuilder .up.> utils.PsiElementTreeUtil : uses
+listeners.ClassAndMethodChangeListener .up.> utils.PsiElementTreeUtil : uses
+@enduml

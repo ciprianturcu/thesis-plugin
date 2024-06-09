@@ -1,5 +1,6 @@
 package actions;
 
+import com.intellij.concurrency.ThreadContext;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -8,6 +9,9 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.psi.PsiDocumentManager;
@@ -19,6 +23,8 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.CommentService;
+
+import javax.swing.*;
 
 public class CommentAction extends AnAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommentAction.class);
@@ -51,16 +57,40 @@ public class CommentAction extends AnAction {
             Messages.showMessageDialog("No valid method was selected", "No Valid Method.", Messages.getWarningIcon());
             return;
         }
-        try {
-            // Perform the action
-            CommentService.getInstance().generateCommentForMethod(project, document, method);
-        } catch (Exception e) {
-            // Handle the error and display the dialog on the EDT
-            ApplicationManager.getApplication().invokeLater(() -> {
-                // Show the error dialog
-                showErrorDialog(e.getMessage());
-            });
+
+        if (method.getDocComment()!=null) {
+            int response = Messages.showOkCancelDialog(
+                    project,
+                    "The method already has a documentation comment. Do you want to overwrite it?",
+                    "Confirm Action",
+                    "OK",
+                    "Cancel",
+                    Messages.getWarningIcon()
+            );
+
+            if (response != Messages.OK) {
+                return;
+            }
         }
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, "Generating comment", false) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                // Set progress bar properties
+                indicator.setIndeterminate(true);
+
+                // Perform the action
+                try {
+                    // Perform the action
+                    CommentService.getInstance().generateCommentForMethod(project, document, method);
+                } catch (Exception e) {
+                    // Handle the error and display the dialog on the EDT
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        // Show the error dialog
+                        showErrorDialog(e.getMessage());
+                    });
+                }
+            }
+        });
     }
 
     private void showErrorDialog(String message) {

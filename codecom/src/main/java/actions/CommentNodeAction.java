@@ -43,14 +43,16 @@ public class CommentNodeAction {
                 }
                 if (methodNode.hasDocComment()) {
                     // Show confirmation dialog
-                    int response = JOptionPane.showConfirmDialog(null,
+                    int response = Messages.showOkCancelDialog(
+                            project,
                             "The method already has a documentation comment. Do you want to overwrite it?",
                             "Confirm Action",
-                            JOptionPane.OK_CANCEL_OPTION,
-                            JOptionPane.WARNING_MESSAGE);
+                            "OK",
+                            "Cancel",
+                            Messages.getWarningIcon()
+                    );
 
-                    if (response != JOptionPane.OK_OPTION) {
-                        // User selected cancel or closed the dialog, so stop the action
+                    if (response != Messages.OK) {
                         return;
                     }
                 }

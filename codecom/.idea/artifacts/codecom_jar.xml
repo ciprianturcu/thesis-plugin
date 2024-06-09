@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="codecom:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/codecom_jar</output-path>
+    <root id="archive" name="codecom.jar" />
+  </artifact>
+</component>
